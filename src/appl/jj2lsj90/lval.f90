@@ -22,15 +22,15 @@
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
       INTEGER           :: LOCATE
-      CHARACTER(LEN=26) :: SET
+      CHARACTER(LEN=42) :: SET
 !
-      DATA SET/ 'spdfghiklmnoqSPDFGHIKLMNOQ'/
+      DATA SET/ 'spdfghiklmnoqrtuvwxyzSPDFGHIKLMNOQRTUVWXYZ'/
 !-----------------------------------------------
       LOCATE = INDEX(SET,SYMBOL)
-      IF (LOCATE <= 13) THEN
+      IF (LOCATE <= 21) THEN
          LVAL = LOCATE - 1
       ELSE
-         LVAL = LOCATE - 14
+         LVAL = LOCATE - 22
       ENDIF
       RETURN
       END FUNCTION LVAL

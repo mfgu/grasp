@@ -41,11 +41,17 @@
       CHARACTER(LEN=2)   :: CTEGER, SYM
       CHARACTER(LEN=6)   :: FORM
 !      CHARACTER(LEN=500) :: RECORD, RECORD2
-      CHARACTER(LEN=1000) :: RECORD, RECORD2
-      CHARACTER(LEN=2), DIMENSION(19) :: SYMLST
+      CHARACTER(LEN=5000) :: RECORD, RECORD2
+!      CHARACTER(LEN=2), DIMENSION(19) :: SYMLST
+!
+!      DATA SYMLST/ 's ', 'p-', 'p ', 'd-', 'd ', 'f-', 'f ', 'g-', 'g ', 'h-', &
+!         'h ', 'i-', 'i ', 'k-', 'k ', 'l-', 'l ', 'm-', 'm'/
+      CHARACTER(LEN=2), DIMENSION(41) :: SYMLST 
 !
       DATA SYMLST/ 's ', 'p-', 'p ', 'd-', 'd ', 'f-', 'f ', 'g-', 'g ', 'h-', &
-         'h ', 'i-', 'i ', 'k-', 'k ', 'l-', 'l ', 'm-', 'm'/
+           'h ', 'i-', 'i ', 'k-', 'k ', 'l-', 'l ', 'm-', 'm', 'n-', 'n', &
+           'o-', 'o', 'q-', 'q', 'r-', 'r', 't-', 't', 'u-', 'u', 'v-', 'v', &
+           'w-', 'w', 'x-', 'x', 'y-', 'y', 'z-', 'z'/
 !-----------------------------------------------
       IOS = 0
 !
@@ -94,7 +100,7 @@
                ENDIF
                IEND = IEND - 1
             ENDIF
-            DO II = 1, 19
+            DO II = 1, 41
                IF (SYM /= SYMLST(II)) CYCLE
                NW = NW + 1
                IF (NW > NNNW) THEN
@@ -130,7 +136,7 @@
       ENDIF
 !
 !      IF (I < 500) THEN
-      IF (I < 1000) THEN
+      IF (I < 5000) THEN
          I = I + 1
          GO TO 1
       ENDIF

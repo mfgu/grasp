@@ -160,8 +160,8 @@
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
 !-----------------------------------------------
-      INTEGER, PARAMETER :: Blocks_number  = 20
-      INTEGER, PARAMETER :: Vectors_number = 100000
+      INTEGER, PARAMETER :: Blocks_number  = 200
+      INTEGER, PARAMETER :: Vectors_number = 500000
 !-----------------------------------------------
 !
 CONTAINS
@@ -217,9 +217,9 @@ CONTAINS
       wb = zero
       do LS_number = 1, asf_set_LS%csf_set_LS%nocsf
          if ((asf_set_LS%csf_set_LS%csf(LS_number)%parity == "+" &
-            .and.  ISPAR(iw1) == 1)  .or.                        &
+            .and.  ISPAR(iw1+NCFMIN-1) == 1)  .or.                        &
             (asf_set_LS%csf_set_LS%csf(LS_number)%parity  == "-" &
-            .and.  ISPAR(iw1) == -1)) then
+            .and.  ISPAR(iw1+NCFMIN-1) == -1)) then
             wa = zero
             do jj_number = NCFMIN, NCFMAX
                if(ithresh(jj_number) == 1 .and.                  &
@@ -1092,7 +1092,34 @@ CONTAINS
             stop  "gettermLS(): program stop F."
          end select
       case default
-         stop  "gettermLS(): program stop G."
+         select case (N)
+         case (1)
+            j = 1
+            LS(j)%l_shell = l_shell
+            LS(j)%w = 0
+            LS(j)%Q = 2*l_shell
+            LS(j)%LL = 2*l_shell
+            LS(j)%S = 1
+         case (2)
+            do i = 1, 2*l_shell+1
+               j = j+1
+               LS(j)%l_shell = l_shell
+               LS(j)%w = 0
+               if (i .eq. 1) then
+                  LS(j)%Q = 2*l_shell+1
+               else
+                  LS(j)%Q = 2*l_shell-1
+               endif
+               LS(j)%LL = 2*(i-1)
+               if (0 .eq. mod(i,2)) then
+                  LS(j)%S = 2
+               else
+                  LS(j)%S = 0
+               endif
+            enddo
+         case default
+            stop "gettermLS(): program stop G"
+         end select
       end select
       number = j
       END SUBROUTINE gettermLS
@@ -1166,7 +1193,7 @@ CONTAINS
       WRITE (ISTDE,*) 'Do you need a unique labeling? (y/n)'
       YES = GETYN ()
       IF (YES) THEN
-         UNIQUE = 1
+         UNIQUE = 0
       ELSE
          UNIQUE = 0
       ENDIF
@@ -1278,13 +1305,13 @@ CONTAINS
       ENDIF
 !
       WRITE (ISTDE,*)
-      IF (IMINCOMPOFF == 1)             &
-         WRITE (*,"(A,F8.3)") ' Maximum % of omitted composition is ',MINCOMP
-      WRITE (*,"(A,ES8.1,A)")   &
-        ' Below ',EPSNEW,' the eigenvector component is to be neglected for calculating'
-      WRITE (*,"(A,ES8.1,A)")   &
-        ' Below ',THRESH,' the eigenvector composition is to be neglected for printing'
-      print *, " "
+!      IF (IMINCOMPOFF == 1)             &
+!         WRITE (*,"(A,F8.3)") ' Maximum % of omitted composition is ',MINCOMP
+!      WRITE (*,"(A,ES8.1,A)")   &
+!        ' Below ',EPSNEW,' the eigenvector component is to be neglected for calculating'
+!      WRITE (*,"(A,ES8.1,A)")   &
+!        ' Below ',THRESH,' the eigenvector composition is to be neglected for printing'
+!      print *, " "
 !
 !     Opening the files  *.lsj.c
 !
@@ -1321,7 +1348,8 @@ CONTAINS
          ENDIF
       END IF
 !GG-2017 end
-      write(57,'(A53)') " Pos   J   Parity      Energy Total      Comp. of ASF"
+!      write(57,'(A53)') " Pos   J   Parity      Energy Total      Comp. of ASF"
+      write(57,'(A57)') "####   Pos   J   Parity      Energy Total      Comp. of ASF"
 !
 !     Opening the files   *.lsj.j and
 !
@@ -1478,7 +1506,7 @@ CONTAINS
       integer :: level, nocsf_min, lev, string_length
       integer :: nocsf_max, sum_nocsf_min, Before_J
 !GG NIST
-      integer :: LOC, NCFMIN, NCFMAX, NCF_LS_jj_MAX
+      integer :: LOC, NCFMIN, NCFMAX, NCF_LS_jj_MAX, nwe, ipa
       real(DOUBLE) :: THRESH, wa, wb,Ssms,g_j,g_JLS, sumthrsh
       character(len=4)   :: string_CNUM
 !GG      character(len=64)  :: string_CSF_ONE
@@ -1559,21 +1587,21 @@ CONTAINS
                   end do
                end if
             end do
-            if(lev == 1) then
-               print *, " "
-               WRITE(*,'(A,A)') " .  .  .  .  .  .  .  .  .  .  .  .  .  .  .",&
-               "  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ."
-               WRITE(*, '(A,2X,I4,16X,A,I3)')                            &
-               " Under investigation is the block:",IBLKNUM,             &
-               " The number of eigenvectors:", number_of_levels(IBLKNUM)
-               WRITE(*,'(A,I10,10X,A,I10)')                              &
-               " The number of CSF (in jj-coupling):",NCFINBLK(IBLKNUM), &
-               " The number of CSF (in LS-coupling):",asf_set_LS%csf_set_LS%nocsf
-            else
-               print *, " "
-               WRITE(*,'(A)') " .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ."
-               WRITE(*,'(A)') " The new level is under investigation."
-            end if
+!            if(lev == 1) then
+!               print *, " "
+!               WRITE(*,'(A,A)') " .  .  .  .  .  .  .  .  .  .  .  .  .  .  .",&
+!               "  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ."
+!               WRITE(*, '(A,2X,I4,16X,A,I3)')                            &
+!               " Under investigation is the block:",IBLKNUM,             &
+!               " The number of eigenvectors:", number_of_levels(IBLKNUM)
+!               WRITE(*,'(A,I10,10X,A,I10)')                              &
+!               " The number of CSF (in jj-coupling):",NCFINBLK(IBLKNUM), &
+!               " The number of CSF (in LS-coupling):",asf_set_LS%csf_set_LS%nocsf
+!            else
+!               print *, " "
+!               WRITE(*,'(A)') " .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ."
+!               WRITE(*,'(A)') " The new level is under investigation."
+!            end if
 !
 !     perform the transformation
 !
@@ -1581,10 +1609,10 @@ CONTAINS
             (iw(1),ithresh,number_of_levels(IBLKNUM),IBLKNUM,levels,NCFMIN,NCFMAX)
 !
 !     output to the screen jj- coupling
-            print *, "Weights of major contributors to ASF in jj-coupling:"
-            print *, " "
-            print *, " Level  J Parity      CSF contributions"
-            print *, " "
+!            print *, "Weights of major contributors to ASF in jj-coupling:"
+!            print *, " "
+!            print *, " Level  J Parity      CSF contributions"
+!            print *, " "
             if (level > 1   .and.   dabs(wb) > 1.0001) then
                print *, "level, wb = ",level,wb
                stop "JJ2LSJ(): program stop A."
@@ -1596,37 +1624,37 @@ CONTAINS
                   exit
                end if
             end do
-            IF(ISPAR(iw(1)) == -1) THEN
+            IF(ISPAR(iw(1)+NCFMIN-1) == -1) THEN
               asf_set_LS%asf(level)%parity = "-"
-            ELSE IF(ISPAR(iw(1)) == 1) THEN
+            ELSE IF(ISPAR(iw(1)+NCFMIN-1) == 1) THEN
               asf_set_LS%asf(level)%parity = "+"
             ELSE
               STOP "JJ2LSJ: program stop D."
             END IF
             asf_set_LS%asf(level)%totalJ = ITJPO(iw(1)+NCFMIN-1) - 1
             call convrt_double(asf_set_LS%asf(level)%totalJ,string_CNUM,string_l)
-            print 16, IVEC(level),string_CNUM(1:string_l),               &
-              asf_set_LS%asf(level)%parity,(weights(j),iw(j),j=1,nocsf_min)
-            print*, "              Total sum over  weight (in jj) is:",wb
-            print *, " "
-            print *, "Definition of leading CSF:"
-            print *, " "
+!            print 16, IVEC(level),string_CNUM(1:string_l),               &
+!              asf_set_LS%asf(level)%parity,(weights(j),iw(j),j=1,nocsf_min)
+!            print*, "              Total sum over  weight (in jj) is:",wb
+!            print *, " "
+!            print *, "Definition of leading CSF:"
+!            print *, " "
 !CGG            call prCSFjj(-1,iw(1))
-            call prCSFjj(-1,iw(1)+NCFMIN-1,iw(1))
+!            call prCSFjj(-1,iw(1)+NCFMIN-1,iw(1))
 !
 !     output to the screen LS- coupling
-            print *, " "
-            print *, " "
-            print *, "Weights of major contributors to ASF in LS-coupling:"
-            print *, " "
-            print *, " Level  J Parity      CSF contributions"
-            print *, " "
+!            print *, " "
+!            print *, " "
+!            print *, "Weights of major contributors to ASF in LS-coupling:"
+!            print *, " "
+!            print *, " Level  J Parity      CSF contributions"
+!            print *, " "
             sum_nocsf_min = 0
             weights = ZERO;  weights2 = ZERO;  iw = 0;  wb = ZERO
             do  i = 1,asf_set_LS%csf_set_LS%nocsf
                wa = asf_set_LS%asf(level)%eigenvector(i)
                wb = wb + wa*wa
-!GG NIST
+               !GG NIST
                if(i == 1) then
                   weights(1)  = wa
                   weights2(1) = wa*wa
@@ -1685,22 +1713,22 @@ CONTAINS
                stop "JJ2LSJ(): program stop C."
             end if
             call convrt_double(asf_set_LS%csf_set_LS%csf(iw(1))%totalJ,string_CNUM,string_l)
-            print 16, asf_set_LS%asf(level)%level_No,string_CNUM(1:string_l), &
-                   asf_set_LS%csf_set_LS%csf(iw(1))%parity,                   &
-                   (weights2(j),iw(j),J=1,5)
-            print*, "              Total sum over  weight (in LSJ) is:",wb
-            print *, " "
-            print *, "Definition of leading CSF:"
-            print *, " "
-            if(sum_nocsf_min > 5) sum_nocsf_min = 5
-            do  i = 1,NCF
-               do  j = 1, sum_nocsf_min
-                  if (i == iw(j)) then
-                     call prCSFLS (-1,asf_set_LS%csf_set_LS,leading_LS(j))
-                     exit
-                  end if
-               end do
-            end do
+!            print 16, asf_set_LS%asf(level)%level_No,string_CNUM(1:string_l), &
+!                   asf_set_LS%csf_set_LS%csf(iw(1))%parity,                   &
+!                   (weights2(j),iw(j),J=1,5)
+!            print*, "              Total sum over  weight (in LSJ) is:",wb
+!            print *, " "
+!            print *, "Definition of leading CSF:"
+!            print *, " "
+!            if(sum_nocsf_min > 5) sum_nocsf_min = 5
+!            do  i = 1,NCF
+!               do  j = 1, sum_nocsf_min
+!                  if (i == iw(j)) then
+!                     call prCSFLS (-1,asf_set_LS%csf_set_LS,leading_LS(j))
+!                     exit
+!                  end if
+!               end do
+!            end do
 !
 !     output to *.lsj.lbl
             IF(Before_J == 0) THEN
@@ -1711,14 +1739,26 @@ CONTAINS
             DO j = 1,nocsf_min
                CALL packlsCSF(asf_set_LS%csf_set_LS,iw(j),string_CSF_ONE)
                IF(J == 1) THEN
-                  write(57,'(1X,I2,1X,A4,5X,A1,8X,F16.9,5X,F7.3,A)')     &
+                  write(57,'(1A,1X,I6,1X,A4,5X,A1,8X,F16.9,5X,F7.3,A)') "#",&  
+!                  write(57,'(1A,1X,I2,1X,A4,5X,A1,8X,F16.9,5X,F7.3,A)') "#",&
                   asf_set_LS%asf(level)%level_No,string_CNUM(1:string_l),&
                   asf_set_LS%csf_set_LS%csf(iw(1))%parity,               &
                   asf_set_LS%asf(level)%energy,wb*100,"%"
                   string_CSF(level) = string_CSF_ONE
                END IF
                string_length = Len_Trim(string_CSF_ONE)
-               write(57,'(7X,F12.8,3X,F11.8,3X,A)') weights(j),weights2(j),string_CSF_ONE(1:string_length)
+               nwe = asf_set_LS%csf_set_LS%nwshells
+               ipa = 1
+               if (asf_set_LS%csf_set_LS%csf(iw(1))%parity .eq. '-') then
+                  ipa = -1
+               endif
+               write(57,'(2X,I6,1X,I2,1X,I2,1X,I2,1X,I2,1X,F12.8,3X,F11.8,3X,A)') &
+                    asf_set_LS%asf(level)%level_No, ipa, &
+                    asf_set_LS%csf_set_LS%csf(iw(j))%totalJ, &
+                    asf_set_LS%csf_set_LS%csf(iw(j))%shellSX(nwe)+1, &
+                    asf_set_LS%csf_set_LS%csf(iw(j))%shellLX(nwe)/2, &
+                    weights(j),weights2(j),string_CSF_ONE(1:string_length)
+!               write(57,'(7X,F12.8,3X,F11.8,3X,A)') weights(j),weights2(j),string_CSF_ONE(1:string_length)
             END DO
 !     output  *.lsj.j and
             IF(ioutj == 1) THEN
@@ -2421,15 +2461,15 @@ CONTAINS
             if(isubc.gt.1) then
                Li(isubc)  = 0;          L_i(isubc) = L_i(isubc-1)
                Si(isubc)  = 0;          S_i(isubc) = S_i(isubc-1)
-               if(isubc .lt. asf_set_LS%csf_set_LS%nwshells) then
-                  call setLS_job_count(isubc + 1, rez)
-               else
-                  if(ittk(S_i(isubc),L_i(isubc),J).eq.1)          &
-                     call setLS_action(action_type, rez) !rez=rez+1
-               end if
             else
                Li(isubc)  = 0;          L_i(isubc) = 0
                Si(isubc)  = 0;          S_i(isubc) = 0
+            end if
+            if(isubc .lt. asf_set_LS%csf_set_LS%nwshells) then
+               call setLS_job_count(isubc + 1, rez)
+            else
+               if(ittk(S_i(isubc),L_i(isubc),J).eq.1)          &
+                    call setLS_action(action_type, rez) !rez=rez+1
             end if
          else
             N = all_occupation(isubc)
@@ -2907,7 +2947,7 @@ CONTAINS
              print*,                                                   &
              "The program is not able perform the identification for", &
              " level = ",Lev_OPT
-             stop
+             return
           end if
           if(IPR == 1) then
             OPT_COUPLING(NUM_OPT) = COUPLING(IPR,Lev_OPT)

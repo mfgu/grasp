@@ -49,7 +49,7 @@
 !  Set up the table of logarithms of factorials
       call factt
 !
-      CALL setiso('isodata')
+!      CALL setiso('isodata')
       CALL jj2lsj
 !
       call stoptime (ncount1, 'jj2lsj')
