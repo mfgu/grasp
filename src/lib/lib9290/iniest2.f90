@@ -76,7 +76,7 @@
 !  scatter the vectors
 
       DO J = 1, NIV
-         CALL DCOPY (NS, VEC(NS*(J-1)+1), 1, BASIS(NCF*(J-1)+1), 1)
+         CALL DCOPY (NS, VEC(NS*(J-1)+1:NS*J), 1, BASIS(NCF*(J-1)+1), 1)
       END DO
 
       CALL DCOPY (NIV, EIGVAL, 1, BASIS(NIV*NCF+1), 1)
